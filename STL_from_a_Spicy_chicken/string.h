@@ -2,7 +2,6 @@
 #define _MYSTRING_H
 
 #include<stdexcept>
-#include"algorithm.h"
 //声明
 namespace Mystd {
 	template<class val_type>
@@ -21,13 +20,13 @@ namespace Mystd {
 		//以s所指向的字符串的首count个字符构造string s能包含空字符.若count大于s长度,则产生的字串为原字符串s
 		basic_string(const val_type* s, size_type count = npos);
 		//移动构造函数.用移动语义构造拥有other内容的string
-		basic_string(basic_string&& other);
+		basic_string(basic_string&& other)noexcept;
 		//析构函数
 		~basic_string();
 		//以str的副本替换内容
 		basic_string& operator=(const basic_string& str);
 		//用移动语义以str的内容替换内容
-		basic_string& operator=(basic_string&& str);
+		basic_string& operator=(basic_string&& str)noexcept;
 		//以s所指向的空终止字符串的内容替换内容
 		basic_string& operator=(const val_type* s);
 		//以字符ch的内容替换内容
@@ -70,7 +69,7 @@ namespace Mystd {
 		basic_string& insert(size_type index, const val_type* s, size_type count);
 		//在位置index插入由str.substr(index_str,count)获得的字符串
 		basic_string& insert(size_type index, const basic_string& str, size_type index_str = 0, size_type count = npos);
-		//移除从index开始的min(count,size()-index)个字符
+		//移除从index开始的std::min(count,size()-index)个字符
 		basic_string& erase(size_type index = 0, size_type count = 1);
 		//后附给定字符ch到字符串尾
 		void push_back(val_type ch);
@@ -138,8 +137,8 @@ namespace Mystd {
 		//size_type rfind(val_type ch, size_type pos = npos) const noexcept;
 		////标准输入重载
 		//std::istream& operator>>(std::istream& in);
-		////标准输出重载
-		//std::ostream& operator<<(std::ostream& out);
+		//标准输出重载
+		std::ostream& operator<<(std::ostream& out);
 		//这是特殊值,等于size_type类型可表示的最大值.准确含义依赖于语境,但通常,期待string下标的函数以之为字符串尾指示器,返回string下标的函数以之为错误指示器
 		static const size_type npos = -1;
 	};
@@ -162,8 +161,8 @@ namespace std {
 	Mystd::basic_string<val_type> operator+(const val_type lhs, const Mystd::basic_string<val_type>& rhs);
 	template< class val_type>
 	void swap(Mystd::basic_string<val_type>& lhs, Mystd::basic_string<val_type>& rhs);
-	template< class val_type>
-	istream& operator>>(istream& in, Mystd::basic_string<val_type>& str);
+	//template< class val_type>
+	//istream& operator>>(istream& in, Mystd::basic_string<val_type>& str);
 	template< class val_type>
 	ostream& operator<<(ostream& out, Mystd::basic_string<val_type>& str);
 }
@@ -215,7 +214,7 @@ namespace Mystd {
 		_source[_capacity] = '\0';
 	}
 	template<class val_type>
-	basic_string<val_type>::basic_string(basic_string&& other) {
+	basic_string<val_type>::basic_string(basic_string&& other)noexcept {
 		_capacity = other._capacity;
 		_source = new val_type[_capacity + 1];
 		memcpy(_source, other._source, _capacity);
@@ -236,7 +235,7 @@ namespace Mystd {
 		return *this;
 	}
 	template<class val_type>
-	basic_string<val_type>& basic_string<val_type>::operator=(basic_string<val_type>&& str) {
+	basic_string<val_type>& basic_string<val_type>::operator=(basic_string<val_type>&& str)noexcept {
 		_capacity = str._capacity;
 		delete[] _source;
 		_source = new val_type[_capacity + 1];
@@ -582,7 +581,7 @@ namespace Mystd {
 	int basic_string<val_type>::compare(const basic_string& str)const noexcept {
 		size_type m_len = length();
 		size_type s_len = str.length();
-		size_type c_len = min(m_len, s_len);
+		size_type c_len = std::min(m_len, s_len);
 		for (size_type i = 0; i < c_len; ++i) {
 			if (_source[i] != str._source[i]) {
 				return _source[i] < str._source[i] ? -1 : 1;
@@ -602,7 +601,7 @@ namespace Mystd {
 		}
 		size_type s_len = str.length();
 		if (pos1 + count1 > m_len)count1 = m_len - pos1;
-		size_type c_len = min(count1, s_len);
+		size_type c_len = std::min(count1, s_len);
 		for (size_type i = 0; i < c_len; ++i) {
 			if (_source[pos1 + i] != str._source[i]) {
 				return _source[pos1 + i] < str._source[i] ? -1 : 1;
@@ -627,7 +626,7 @@ namespace Mystd {
 		}
 		if (count1 == npos || pos1 + count1 > m_len)count1 = m_len - pos1;
 		if (count2 == npos || pos2 + count2 > s_len)count2 = s_len - pos2;
-		size_type c_len = min(count1, count2);
+		size_type c_len = std::min(count1, count2);
 		for (size_type i = 0; i < c_len; ++i) {
 			if (_source[pos1 + i] != str._source[pos2 + i]) {
 				return _source[pos1 + i] < str._source[pos2 + i] ? -1 : 1;
@@ -642,7 +641,7 @@ namespace Mystd {
 	int basic_string<val_type>::compare(const val_type* s)const {
 		size_type m_len = length();
 		size_type s_len = strlen(s);
-		size_type c_len = min(m_len, s_len);
+		size_type c_len = std::min(m_len, s_len);
 		for (size_type i = 0; i < c_len; ++i) {
 			if (_source[i] != s[i]) {
 				return _source[i] < s[i] ? -1 : 1;
@@ -662,7 +661,7 @@ namespace Mystd {
 		}
 		size_type s_len = strlen(s);
 		if (pos1 + count1 > m_len)count1 = m_len - pos1;
-		size_type c_len = min(count1, s_len);
+		size_type c_len = std::min(count1, s_len);
 		for (size_type i = 0; i < c_len; ++i) {
 			if (_source[pos1 + i] != s[i]) {
 				return _source[pos1 + i] < s[i] ? -1 : 1;
@@ -682,7 +681,7 @@ namespace Mystd {
 		}
 		size_type s_len = strlen(s);
 		if (pos1 + count1 > m_len)count1 = m_len - pos1;
-		size_type c_len = min(count1, count2);
+		size_type c_len = std::min(count1, count2);
 		for (size_type i = 0; i < c_len; ++i) {
 			if (_source[pos1 + i] != s[i]) {
 				return _source[pos1 + i] < s[i] ? -1 : 1;
@@ -895,12 +894,12 @@ namespace Mystd {
 	//	in >> _source;
 	//	return in;
 	//}
-	//template<class val_type>
-	//std::ostream& basic_string<val_type>::operator<<(std::ostream& out)
-	//{
-	//	out << _source;
-	//	return out;
-	//}
+	template<class val_type>
+	std::ostream& basic_string<val_type>::operator<<(std::ostream& out)
+	{
+		out << _source;
+		return out;
+	}
 }
 
 //定义
@@ -929,11 +928,11 @@ namespace std {
 	void swap(std::basic_string<val_type>& lhs, std::basic_string<val_type>& rhs) {
 		lhs.swap(rhs);
 	}
-	template< class val_type>
-	istream& operator>>(istream& in, Mystd::basic_string<val_type>& str) {
-		str.operator>>(in);
-		return in;
-	}
+	//template< class val_type>
+	//istream& operator>>(istream& in, Mystd::basic_string<val_type>& str) {
+	//	str.operator>>(in);
+	//	return in;
+	//}
 	template< class val_type>
 	ostream& operator<<(ostream& out, Mystd::basic_string<val_type>& str) {
 		str.operator<<(out);
@@ -941,3 +940,287 @@ namespace std {
 	}
 }
 #endif
+
+//#include<iostream>
+//#include"string.h"
+//
+//int main() {
+//
+//	Mystd::string s1 = Mystd::string();
+//	Mystd::string s2 = Mystd::string();
+//	//构造方法测试
+//	std::cout << "构造方法测试" << std::endl;
+//	s1 = Mystd::string(10, '1');
+//	std::cout << s1 << std::endl;	//1111111111
+//	s1 = Mystd::string("123");
+//	s2 = Mystd::string(s1);
+//	std::cout << s2 << std::endl;	//123
+//	s2 = Mystd::string(s1, 2, 1);
+//	std::cout << s2 << std::endl;	//3
+//	s2 = Mystd::string(s1, 1);
+//	std::cout << s2 << std::endl;	//23
+//	s2 = Mystd::string("123", 2);
+//	std::cout << s2 << std::endl;	//12
+//	//operator=
+//	std::cout << "operator=" << std::endl;
+//	s1 = "123";
+//	std::cout << s1 << std::endl;	//123
+//	s1 = 'a';
+//	std::cout << s1 << std::endl;	//a
+//	//at
+//	std::cout << "at" << std::endl;
+//	s1 = "12345";
+//	std::cout << s1.at(0) << std::endl;	//1
+//	std::cout << s1.at(1) << std::endl;	//2
+//	std::cout << s1.at(2) << std::endl;	//3
+//	//operator[]
+//	std::cout << "operator[]" << std::endl;
+//	s1 = "12345";
+//	std::cout << s1[0] << std::endl;	//1
+//	std::cout << s1[1] << std::endl;	//2
+//	std::cout << s1[2] << std::endl;	//3
+//	s1[0] = 'a';
+//	s1[1] = 'b';
+//	s1[2] = 'c';
+//	std::cout << s1 << std::endl;		//abc45
+//	//front
+//	std::cout << "front" << std::endl;
+//	s1 = "12345";
+//	std::cout << s1.front() << std::endl;	//1
+//	s1.front() = 'a';
+//	std::cout << s1.front() << std::endl;	//a
+//	//back
+//	std::cout << "back" << std::endl;
+//	s1 = "12345";
+//	std::cout << s1.back() << std::endl;	//5
+//	s1.back() = 'e';
+//	std::cout << s1.back() << std::endl;	//e
+//	//c_str
+//	std::cout << "c_str" << std::endl;
+//	s1 = "123";
+//	std::cout << s1.c_str() << std::endl;	//123
+//	//empty
+//	std::cout << "empty" << std::endl;
+//	s1 = "1234";
+//	std::cout << s1.empty() << std::endl;	//0
+//	s1 = "";
+//	std::cout << s1.empty() << std::endl;	//1
+//	//size|length
+//	std::cout << "size|length" << std::endl;
+//	s1 = { "123abc" };
+//	std::cout << s1.size() << std::endl;	//6
+//	std::cout << s1.length() << std::endl;	//6
+//	s1[3] = '\0';
+//	std::cout << s1.size() << std::endl;	//3
+//	std::cout << s1.length() << std::endl;	//3
+//	s1[0] = '\0';
+//	std::cout << s1.size() << std::endl;	//0
+//	std::cout << s1.length() << std::endl;	//0
+//	//capacity
+//	std::cout << "capacity" << std::endl;
+//	s1 = "123";
+//	std::cout << s1.capacity() << std::endl;	//3
+//	s1 += "111111111111111111111111111";
+//	std::cout << s1.capacity() << std::endl;	//48
+//	//reserve
+//	std::cout << "reserve" << std::endl;
+//	s1 = "123";
+//	std::cout << s1.capacity() << std::endl;	//3
+//	s1.reserve(100);
+//	std::cout << s1.capacity() << std::endl;	//100
+//	s1.reserve(1);
+//	std::cout << s1.capacity() << std::endl;	//3
+//	s1.reserve(5);
+//	std::cout << s1.capacity() << std::endl;	//5
+//	//shrink_to_fit
+//	std::cout << "shrink_to_fit" << std::endl;
+//	s1 = "123";
+//	std::cout << s1.capacity() << std::endl;	//3
+//	s1.reserve(100);
+//	std::cout << s1.capacity() << std::endl;	//100
+//	s1.shrink_to_fit();
+//	std::cout << s1.capacity() << std::endl;	//3
+//	//clear
+//	std::cout << "clear" << std::endl;
+//	s1 = "123";
+//	std::cout << s1 << std::endl;				//123
+//	s1.clear();
+//	std::cout << s1 << std::endl;				//
+//	std::cout << s1.size() << std::endl;		//0
+//	std::cout << s1.capacity() << std::endl;	//3
+//	//insert
+//	std::cout << "insert" << std::endl;
+//	s1 = "123";
+//	std::cout << s1 << std::endl;				//123
+//	s1.insert(0, 5, 'a');
+//	std::cout << s1 << std::endl;				//aaaaa123
+//	s1.insert(3, "123");
+//	std::cout << s1 << std::endl;				//aaa123aa123
+//	s1.insert(3, "abc\0abc", 5);
+//	std::cout << s1 << std::endl;				//aaaabc\0a123aa123
+//	s1[6] = 'e';
+//	std::cout << s1 << std::endl;				//aaaabcea123aa123
+//	s1 = "123";
+//	s2 = "456";
+//	s1.insert(1, s2, 1);
+//	std::cout << s1 << std::endl;				//14523
+//	//erase
+//	std::cout << "erase" << std::endl;
+//	s1 = "123456789";
+//	std::cout << s1 << std::endl;				//123456789
+//	s1.erase(2, 5);
+//	std::cout << s1 << std::endl;				//1289
+//	s1.erase(2);
+//	std::cout << s1 << std::endl;				//129
+//	//push_back
+//	std::cout << "push_back" << std::endl;
+//	s1 = "123456";
+//	std::cout << s1 << std::endl;				//123456
+//	s1.push_back('a');
+//	std::cout << s1 << std::endl;				//123456a
+//	s1.push_back('b');
+//	std::cout << s1 << std::endl;				//123456ab
+//	s1.push_back('c');
+//	std::cout << s1 << std::endl;				//123456abc
+//	//pop_back
+//	std::cout << "pop_back" << std::endl;
+//	s1 = "123456";
+//	std::cout << s1 << std::endl;				//123456
+//	s1.pop_back();
+//	std::cout << s1 << std::endl;				//12345
+//	s1.pop_back();
+//	std::cout << s1 << std::endl;				//1234
+//	s1.pop_back();
+//	std::cout << s1 << std::endl;				//123
+//	//append
+//	std::cout << "append" << std::endl;
+//	s1 = "1";
+//	std::cout << s1 << std::endl;				//1
+//	s1.append(5, 'a');
+//	std::cout << s1 << std::endl;				//1aaaaa
+//	s2 = "321";
+//	s1.append(s2);
+//	std::cout << s1 << std::endl;				//1aaaaa321
+//	s1.append("1\0ba", 3);
+//	std::cout << s1 << std::endl;				//1aaaaa3211
+//	s1[10] = 'c';
+//	std::cout << s1 << std::endl;				//1aaaaa3211cb
+//	s1.append("123");
+//	std::cout << s1 << std::endl;				//1aaaaa3211cb123
+//	//operator+=
+//	std::cout << "operator+=" << std::endl;
+//	s1 = "123";
+//	std::cout << s1 << std::endl;				//123
+//	s2 = "456";
+//	std::cout << s2 << std::endl;				//456
+//	s1 += s2;
+//	std::cout << s1 << std::endl;				//123456
+//	s2 += s2;
+//	std::cout << s2 << std::endl;				//456456
+//	s1 += "abc";
+//	std::cout << s1 << std::endl;				//123456abc
+//	s1 += '#';
+//	std::cout << s1 << std::endl;				//123456abc#
+//	//compare
+//	std::cout << "compare" << std::endl;
+//	s1 = "123";
+//	s2 = "012";
+//	std::cout << s1.compare(s2) << std::endl;	//1
+//	s1 = "123";
+//	s2 = "1234";
+//	std::cout << s1.compare(s2) << std::endl;	//-1
+//	s1 = "123";
+//	s2 = "123";
+//	std::cout << s1.compare(s2) << std::endl;	//0
+//	s1 = "3123";
+//	s2 = "123";
+//	std::cout << s1.compare(1, 3, s2) << std::endl;	//0
+//	s1 = "3123";
+//	s2 = "321123";
+//	std::cout << s1.compare(1, 3, s2, 3, 3) << std::endl;	//0
+//	s1 = "123";
+//	std::cout << s1.compare("321") << std::endl;	//-1
+//	s1 = "3123";
+//	std::cout << s1.compare(1, 3, "123") << std::endl;	//0
+//	s1 = "3123";
+//	std::cout << s1.compare(1, 3, "123\0a", 4) << std::endl;	//-1
+//	//replace
+//	std::cout << "replace" << std::endl;
+//	s1 = "123";
+//	s2 = "456";
+//	s1.replace(1, 1, s2);
+//	std::cout << s1 << std::endl;	//14563
+//	s1 = "123";
+//	s2 = "456";
+//	s1.replace(1, 1, s2, 1, 2);
+//	std::cout << s1 << std::endl;	//1563
+//	s1 = "123";
+//	s1.replace(1, 1, "456", 2);
+//	std::cout << s1 << std::endl;	//1453
+//	s1 = "123";
+//	s1.replace(1, 1, "45\0ab", 5);
+//	std::cout << s1 << std::endl;	//145
+//	s1[3] = 'e';
+//	std::cout << s1 << std::endl;	//145eab3
+//	s1 = "123";
+//	s1.replace(1, 1, "45ab");
+//	std::cout << s1 << std::endl;	//145ab3
+//	s1 = "123";
+//	s1.replace(1, 1, 5, 'a');
+//	std::cout << s1 << std::endl;	//1aaaaa3
+//	//substr
+//	std::cout << "substr" << std::endl;
+//	s1 = "123456789";
+//	s2 = s1.substr(1, 2);
+//	std::cout << s2 << std::endl;	//23
+//	s2 = s1.substr(3);
+//	std::cout << s2 << std::endl;	//456789
+//	//copy
+//	std::cout << "copy" << std::endl;
+//	s1 = "123456789";
+//	char buf[4] = { '\0' };
+//	s1.copy(buf, 0, 3);
+//	std::cout << buf << std::endl;	//123
+//	s1.copy(buf, 3, 3);
+//	std::cout << buf << std::endl;	//456
+//	//resize
+//	std::cout << "resize" << std::endl;
+//	s1 = "123";
+//	s1.resize(10, '1');
+//	std::cout << s1 << std::endl;				//1111111111
+//	std::cout << s1.size() << std::endl;		//10
+//	std::cout << s1.capacity() << std::endl;	//12
+//	s1.resize(5, 'a');
+//	std::cout << s1 << std::endl;				//aaaaa
+//	std::cout << s1.size() << std::endl;		//5
+//	std::cout << s1.capacity() << std::endl;	//12
+//	//swap
+//	std::cout << "swap" << std::endl;
+//	s1 = "123";
+//	s2 = "456";
+//	s1.swap(s2);
+//	std::cout << s1 << std::endl;	//456
+//	std::cout << s2 << std::endl;	//123
+//	s1 = "123";
+//	s2 = "";
+//	s1.swap(s2);
+//	std::cout << s1 << std::endl;	//
+//	std::cout << s2 << std::endl;	//123
+//	s1 = "123";
+//	s2 = "4567";
+//	s1.swap(s2);
+//	std::cout << s1 << std::endl;	//4567
+//	std::cout << s2 << std::endl;	//123
+//	s1 = "";
+//	s2 = "";
+//	s1.swap(s2);
+//	std::cout << s1 << std::endl;	//
+//	std::cout << s2 << std::endl;	//
+//
+//	std::swap(s1, s2);
+//	//operator<<  operator>>
+//	//std::cout << "operator<<  operator>>" << std::endl;
+//	//std::cout << "请输入s1 : ";
+//	//std::cin >> s1;
+//	//std::cout << "s1 : " << s1 << std::endl;
+//}
